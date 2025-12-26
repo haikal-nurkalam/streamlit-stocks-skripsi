@@ -9,7 +9,7 @@ import os
 # Page config
 st.set_page_config(
     page_title="Prediksi Saham Perbankan",
-    page_icon="📈",
+    page_icon="logo.png",
     layout="wide"
 )
 
