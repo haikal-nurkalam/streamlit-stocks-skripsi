@@ -19,9 +19,8 @@ class StockPredictor:
         self.feature_names = []
         
     def load_from_csv(self, csv_file):
-        """Load data dari CSV (Investing.com format)"""
         try:
-            print(f"📂 Loading data from CSV...")
+            print(f"Loading data from CSV...")
             
             # Read CSV
             df = pd.read_csv(csv_file)
@@ -67,9 +66,9 @@ class StockPredictor:
             # Remove NaN
             df = df.dropna(subset=['open', 'high', 'low', 'close'])
             
-            print(f"   ✅ Loaded {len(df)} days")
-            print(f"   📅 {df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
-            print(f"   💰 Price range: Rp {df['close'].min():,.0f} - Rp {df['close'].max():,.0f}")
+            print(f"    Loaded {len(df)} days")
+            print(f"    {df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
+            print(f"    Price range: Rp {df['close'].min():,.0f} - Rp {df['close'].max():,.0f}")
             
             return df
             
@@ -80,7 +79,7 @@ class StockPredictor:
             return None
     
     def calculate_technical_indicators(self, df):
-        """Calculate technical indicators"""
+        """Hitung Indikator"""
         df = df.copy()
         
         # Moving Averages
@@ -152,7 +151,7 @@ class StockPredictor:
     
     def train_model(self, X_train, y_train):
         """Train Random Forest"""
-        print(f"🎓 Training with {len(X_train)} samples...")
+        print(f"Training with {len(X_train)} samples...")
         
         X_train_scaled = self.scaler.fit_transform(X_train)
         
@@ -166,10 +165,10 @@ class StockPredictor:
         )
         
         self.model.fit(X_train_scaled, y_train)
-        print(f"✅ Training complete!")
+        print(f"Training complete!")
     
     def predict_future(self, df_clean, days_ahead=5, max_daily_change=0.03):
-        """Predict future prices with realistic constraints"""
+        """Predict future prices"""
         predictions = []
         current_price = df_clean['close'].iloc[-1]
         
@@ -256,11 +255,11 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
             return {'success': False, 'error': 'Insufficient data (need at least 100 days)'}
         
         # 2. Calculate indicators
-        print("📊 Calculating technical indicators...")
+        print("Calculating technical indicators...")
         df = predictor.calculate_technical_indicators(df)
         
         # 3. Create sequences
-        print("🔧 Creating training sequences...")
+        print("Creating training sequences...")
         X, y, df_clean = predictor.create_sequences(df, target_days_ahead=prediction_days)
         
         if len(X) < 100:
@@ -275,11 +274,11 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
         predictor.train_model(X_train, y_train)
         
         # 6. Evaluate
-        print("📈 Evaluating model...")
+        print("Evaluating model...")
         test_metrics = predictor.evaluate_model(X_test, y_test)
         
         # 7. Predict future (with 3% daily limit)
-        print(f"🔮 Predicting {prediction_days} days ahead...")
+        print(f"Predicting {prediction_days} days ahead...")
         future_predictions = predictor.predict_future(
             df_clean, 
             days_ahead=prediction_days,
@@ -301,9 +300,9 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
         recent_dates = recent_data['date'].values
         recent_prices = recent_data['close'].values
         
-        print(f"📊 Historical data: {len(recent_dates)} days")
-        print(f"   Last date: {recent_dates[-1]}")
-        print(f"🔮 Future predictions: {len(future_predictions)} days")
+        print(f"Historical data: {len(recent_dates)} days")
+        print(f"Last date: {recent_dates[-1]}")
+        print(f"Future predictions: {len(future_predictions)} days")
         
         # 10. Calculate stats
         current_price = df['close'].iloc[-1]
@@ -333,7 +332,7 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
             'feature_importance': predictor.get_feature_importance()
         }
         
-        print("✅ Prediction complete!")
+        print(" Prediction complete!")
         return results
         
     except Exception as e:
@@ -354,7 +353,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
     - Exit: Hit TP/SL atau holding period habis
     """
     try:
-        print(f"\n💰 Running Automatic Trading Backtest...")
+        print(f"\n Running Automatic Trading Backtest...")
         print(f"Strategy: TP/SL 1:1 based on prediction")
         
         # Load & train model
@@ -411,13 +410,13 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
                 if high_price >= tp_price:
                     exit_value = holdings * tp_price
                     entry_value = holdings * entry_price
-                    profit = exit_value - entry_value  # ✅ Compare with entry!
+                    profit = exit_value - entry_value  #  Compare with entry!
                     profit_pct = (profit / entry_value) * 100
                     
                     capital = exit_value
 
                     
-                    print(f"  ✅ TP Hit! Exit @ Rp {tp_price:,.0f} | Profit: {profit_pct:+.2f}%")
+                    print(f"   TP Hit! Exit @ Rp {tp_price:,.0f} | Profit: {profit_pct:+.2f}%")
                     
                     trades.append({
                         'trade_num': len(trades) + 1,
@@ -441,7 +440,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
                 elif low_price <= sl_price:
                     exit_value = holdings * sl_price
                     entry_value = holdings * entry_price
-                    profit = exit_value - entry_value  # ✅ Should be NEGATIVE!
+                    profit = exit_value - entry_value  #  Should be NEGATIVE!
                     profit_pct = (profit / entry_value) * 100
                     
                     capital = exit_value
@@ -471,7 +470,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
                 elif i - entry_idx >= prediction_days:
                     exit_value = holdings * current_price
                     entry_value = holdings * entry_price
-                    profit = exit_value - entry_value  # ✅ Correct!
+                    profit = exit_value - entry_value  #  Correct!
                     profit_pct = (profit / entry_value) * 100
                     
                     capital = exit_value
@@ -522,7 +521,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
                     capital = 0
                     position_open = True
                     
-                    print(f"  📈 BUY {shares:.0f} shares @ Rp {entry_price:,.0f}")
+                    print(f"  BUY {shares:.0f} shares @ Rp {entry_price:,.0f}")
                     print(f"     Predicted: {predicted_gain_pct:+.2f}% | TP: {tp_price:,.0f} | SL: {sl_price:,.0f}")
             
             # Track portfolio
@@ -541,7 +540,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
             final_price = df_clean.iloc[-1]['close']
             exit_value = holdings * final_price
             entry_value = holdings * entry_price
-            profit = exit_value - entry_value  # ✅ Correct!
+            profit = exit_value - entry_value  #  Correct!
             profit_pct = (profit / entry_value) * 100
             
             capital = exit_value
@@ -630,7 +629,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
         # 4. Total number of trades
         total_trades = len(trades)
         
-        print(f"\n✅ Backtest Complete!")
+        print(f"\n Backtest Complete!")
         print(f"Return: {total_return:+.2f}% | Win Rate: {win_rate:.1f}%")
         print(f"TP: {tp_exits} | SL: {sl_exits} | Time: {time_exits}")
         print(f"Max Drawdown: {max_drawdown_pct:.2f}% | Sharpe: {sharpe_ratio:.2f}")
