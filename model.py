@@ -29,36 +29,17 @@ class StockPredictor:
             df.columns = [col.lower().strip() for col in df.columns]
             print(f"   Columns: {list(df.columns)}")
             
-            # Rename Investing.com columns
-            if 'price' in df.columns:
-                df.rename(columns={'price': 'close'}, inplace=True)
-            if 'vol.' in df.columns:
-                df.rename(columns={'vol.': 'volume'}, inplace=True)
+            # Parse date (format dari yahooquery udah clean: YYYY-MM-DD)
+            df['date'] = pd.to_datetime(df['date'])
             
-            # Parse date
-            df['date'] = pd.to_datetime(df['date'], format='mixed', dayfirst=False)
-            
-            # Clean prices (remove commas)
+            # Convert to float (data dari yahooquery udah numeric, tapi just in case)
             for col in ['open', 'high', 'low', 'close']:
-                if col in df.columns and df[col].dtype == 'object':
-                    df[col] = df[col].str.replace(',', '').astype(float)
+                if col in df.columns:
+                    df[col] = df[col].astype(float)
             
-            # Clean volume (handle M, K, B suffix)
-            if 'volume' in df.columns and df['volume'].dtype == 'object':
-                def parse_volume(vol):
-                    if pd.isna(vol) or vol == '-':
-                        return 0
-                    vol = str(vol).strip().replace(',', '')
-                    if 'M' in vol:
-                        return int(float(vol.replace('M', '')) * 1_000_000)
-                    elif 'K' in vol:
-                        return int(float(vol.replace('K', '')) * 1_000)
-                    elif 'B' in vol:
-                        return int(float(vol.replace('B', '')) * 1_000_000_000)
-                    else:
-                        return int(float(vol))
-                
-                df['volume'] = df['volume'].apply(parse_volume)
+            # Convert volume to int
+            if 'volume' in df.columns:
+                df['volume'] = df['volume'].astype(int)
             
             # Sort by date (oldest first)
             df = df.sort_values('date').reset_index(drop=True)
@@ -172,11 +153,11 @@ class StockPredictor:
         predictions = []
         current_price = df_clean['close'].iloc[-1]
         
-        # Get latest features
+        # Ambil latest features
         latest_features = df_clean.iloc[-1:][self.feature_names].values
         latest_scaled = self.scaler.transform(latest_features)
         
-        # Predict first day
+        # Prediksi first day
         pred_price = self.model.predict(latest_scaled)[0]
         
         # Apply constraint
@@ -207,7 +188,7 @@ class StockPredictor:
         return predictions
     
     def evaluate_model(self, X_test, y_test):
-        """Evaluate model"""
+        """Evaluasi model"""
         X_test_scaled = self.scaler.transform(X_test)
         predictions = self.model.predict(X_test_scaled)
         
@@ -228,7 +209,7 @@ class StockPredictor:
         }
     
     def get_feature_importance(self):
-        """Get feature importance"""
+        """Ambil feature importance"""
         if self.model is None:
             return pd.DataFrame()
         
@@ -241,21 +222,21 @@ class StockPredictor:
 
 
 def run_prediction(ticker, prediction_days=5, csv_file=None):
-    """Main function: Train model & predict future"""
+    """Training model & prediction future"""
     try:
         predictor = StockPredictor(ticker, prediction_days=prediction_days)
         
         # 1. Load data from CSV
         if csv_file is None:
-            return {'success': False, 'error': 'CSV file path required'}
+            return {'success': False, 'error': 'CSV tidak tersedia'}
         
         df = predictor.load_from_csv(csv_file)
         
         if df is None or len(df) < 100:
-            return {'success': False, 'error': 'Insufficient data (need at least 100 days)'}
+            return {'success': False, 'error': 'Data Kurang'}
         
         # 2. Calculate indicators
-        print("Calculating technical indicators...")
+        print("Hitung teknikal indikator...")
         df = predictor.calculate_technical_indicators(df)
         
         # 3. Create sequences
@@ -285,7 +266,7 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
             max_daily_change=0.03
         )
         
-        # 8. Generate future dates (skip weekends)
+        # 8. Generate future dates (skip tanggal weekend)
         last_date = df['date'].iloc[-1]
         future_dates = []
         current_date = last_date
@@ -294,7 +275,7 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
             if current_date.weekday() < 5:
                 future_dates.append(current_date)
         
-        # 9. Get recent historical (FIXED: use original df, not df_clean)
+        # 9. Get recent historical data
         recent_days = min(30, len(df))
         recent_data = df.tail(recent_days)[['date', 'close']]
         recent_dates = recent_data['date'].values

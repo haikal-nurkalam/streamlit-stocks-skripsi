@@ -13,55 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Simple CSS
-st.markdown("""
-<style>
-    .stApp {
-        background-color: #ffffff;
-    }
-    
-    [data-testid="stSidebar"] {
-        background-color: #f0f0f0;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-        color: #1f1f1f !important;
-    }
-    
-    p, span, div {
-        color: #1f1f1f;
-    }
-    
-    .stButton > button {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 5px;
-        border: none;
-        width: 100%;
-    }
-    
-    .stButton > button:hover {
-        background-color: #45a049;
-    }
-    
-    [data-testid="stMetricLabel"] {
-        color: #666666 !important;
-    }
-    
-    [data-testid="stMetricValue"] {
-        color: #1f1f1f !important;
-    }
-    
-    .stDataFrame {
-        color: #1f1f1f;
-    }
-    
-    .stMarkdown {
-        color: #1f1f1f;
-    }
-</style>
-""", unsafe_allow_html=True)
+
 
 # Title
 st.title("Sistem Prediksi Harga Saham Perbankan")
@@ -71,9 +23,9 @@ st.write("---")
 # CSV filename mapping
 CSV_FILES = {
     'BBCA': 'Bank Central Asia Stock Price History.csv',
-    'BBRI': 'Bank Rakyat Persero Stock Price History.csv',
+    'BBRI': 'Bank Rakyat Indonesia Stock Price History.csv',
     'BMRI': 'Bank Mandiri Stock Price History.csv',
-    'BBNI': 'Bank Negar Stock Price History.csv',
+    'BBNI': 'Bank Negara Indonesia Stock Price History.csv',
     'BBTN': 'Bank Tabungan Negara Stock Price History.csv'
 }
 
