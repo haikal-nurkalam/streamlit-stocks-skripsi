@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from model import run_prediction, STOCK_TICKERS, trading_backtest
 import os
+from update_data import update_stock_data
 
 # Page config
 st.set_page_config(
@@ -12,6 +13,39 @@ st.set_page_config(
     page_icon="logo.png",
     layout="wide"
 )
+
+def need_update(filename, max_age_hours=24):
+    """Check apakah data perlu diupdate"""
+    filepath = f'data/{filename}'
+    
+    if not os.path.exists(filepath):
+        return True
+    
+    mod_time = datetime.fromtimestamp(os.path.getmtime(filepath))
+    age = datetime.now() - mod_time
+    
+    return age > timedelta(hours=max_age_hours)
+
+# Update data saat app pertama kali dibuka
+if 'data_checked' not in st.session_state:
+    stocks = {
+        'BBCA.JK': 'Bank Central Asia Stock Price History.csv',
+        'BBRI.JK': 'Bank Rakyat Indonesia Stock Price History.csv',
+        'BMRI.JK': 'Bank Mandiri Stock Price History.csv',
+        'BBNI.JK': 'Bank Negara Indonesia Stock Price History.csv',
+        'BBTN.JK': 'Bank Tabungan Negara Stock Price History.csv'
+    }
+    
+    needs_update = any(need_update(f) for f in stocks.values())
+    
+    if needs_update:
+        with st.spinner("🔄 Updating stock data... Please wait..."):
+            for ticker, filename in stocks.items():
+                if need_update(filename):
+                    update_stock_data(ticker, filename, start_year=2020)
+        st.success("✅ Data updated successfully!")
+    
+    st.session_state.data_checked = True
 
 
 
