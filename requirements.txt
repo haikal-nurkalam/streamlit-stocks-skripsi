@@ -4,3 +4,4 @@ numpy==1.26.3
 plotly==5.18.0
 scikit-learn==1.4.0
 yfinance==0.2.36
+yahooquery==2.3.7
