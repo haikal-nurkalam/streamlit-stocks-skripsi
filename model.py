@@ -32,7 +32,7 @@ class StockPredictor:
             # Parse date (format dari yahooquery udah clean: YYYY-MM-DD)
             df['date'] = pd.to_datetime(df['date'])
             
-            # Convert to float (data dari yahooquery udah numeric, tapi just in case)
+            # Convert to float 
             for col in ['open', 'high', 'low', 'close']:
                 if col in df.columns:
                     df[col] = df[col].astype(float)
@@ -521,7 +521,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
             final_price = df_clean.iloc[-1]['close']
             exit_value = holdings * final_price
             entry_value = holdings * entry_price
-            profit = exit_value - entry_value  #  Correct!
+            profit = exit_value - entry_value  
             profit_pct = (profit / entry_value) * 100
             
             capital = exit_value
@@ -530,7 +530,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
                 'trade_num': len(trades) + 1,
                 'buy_date': entry_date,
                 'buy_price': entry_price,
-                'sell_date': final_date,
+                'sell_date': current_date,
                 'sell_price': final_price,
                 'predicted_price': predicted_target,
                 'tp_price': tp_price,
