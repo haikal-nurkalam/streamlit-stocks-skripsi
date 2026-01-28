@@ -588,7 +588,7 @@ def trading_backtest(csv_file, prediction_days=5, initial_capital=10_000_000):
             mean_return = np.mean(returns)
             std_return = np.std(returns)
             
-            # Assume 252 trading days per year
+            # Assume 252 hari trading per tahun
             # trading_days_per_year / avg_holding_period = trades_per_year
             avg_holding_days = prediction_days
             trades_per_year = 252 / avg_holding_days
