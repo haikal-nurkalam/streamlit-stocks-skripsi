@@ -185,7 +185,7 @@ class StockPredictor:
         print(f"\n⚠️  Semua {max_attempts} attempt selesai. Pake model terakhir.")
         self.best_params_ = params
     
-    def predict_future(self, df_clean, days_ahead=5, max_daily_change=0.03):
+    def predict_future(self, df_clean, days_ahead=5, max_daily_change=0.3):
         """Predict future prices"""
         predictions = []
         current_price = df_clean['close'].iloc[-1]
@@ -209,7 +209,7 @@ class StockPredictor:
             prev_price = predictions[-1]
             
             # Small variation
-            noise_factor = 1 + np.random.randn() * 0.001
+            noise_factor = 1 + np.random.randn() * 0.01
             varied_features = latest_features * noise_factor
             varied_scaled = self.scaler.transform(varied_features)
             
