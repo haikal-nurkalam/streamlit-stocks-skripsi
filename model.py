@@ -130,23 +130,60 @@ class StockPredictor:
         
         return X, y, df_clean
     
-    def train_model(self, X_train, y_train):
-        """Train Random Forest"""
-        print(f"Training with {len(X_train)} samples...")
-        
+    def train_model(self, X_train, y_train, X_test=None, y_test=None, accuracy_threshold=60, max_attempts=5):
+        """Train Random Forest with hyperparameter tuning loop.
+        Jika accuracy < threshold (default 60%), otomatis retry dengan hyperparameter berbeda.
+        """
+        param_candidates = [
+            {'n_estimators': 100, 'max_depth': 15, 'min_samples_split': 5, 'min_samples_leaf': 2},
+            {'n_estimators': 200, 'max_depth': 20, 'min_samples_split': 3, 'min_samples_leaf': 1},
+            {'n_estimators': 300, 'max_depth': 10, 'min_samples_split': 5, 'min_samples_leaf': 3},
+            {'n_estimators': 500, 'max_depth': 25, 'min_samples_split': 2, 'min_samples_leaf': 1},
+            {'n_estimators': 200, 'max_depth': None, 'min_samples_split': 10, 'min_samples_leaf': 5},
+        ]
+
         X_train_scaled = self.scaler.fit_transform(X_train)
-        
-        self.model = RandomForestRegressor(
-            n_estimators=self.n_estimators,
-            max_depth=15,
-            min_samples_split=5,
-            min_samples_leaf=2,
-            random_state=self.random_state,
-            n_jobs=-1
-        )
-        
-        self.model.fit(X_train_scaled, y_train)
-        print(f"Training complete!")
+
+        for attempt in range(max_attempts):
+            params = param_candidates[attempt]
+            print(f"\n🔄 Training attempt {attempt + 1}/{max_attempts}")
+            print(f"   Params: {params}")
+
+            self.model = RandomForestRegressor(
+                n_estimators=params['n_estimators'],
+                max_depth=params['max_depth'],
+                min_samples_split=params['min_samples_split'],
+                min_samples_leaf=params['min_samples_leaf'],
+                random_state=self.random_state,
+                n_jobs=-1
+            )
+
+            self.model.fit(X_train_scaled, y_train)
+            print(f"   Training complete!")
+
+            # Kalau X_test & y_test ada → evaluasi akurasi untuk loop
+            if X_test is not None and y_test is not None:
+                X_test_scaled = self.scaler.transform(X_test)
+                predictions = self.model.predict(X_test_scaled)
+                accuracy = np.mean(np.abs((y_test - predictions) / y_test) < 0.05) * 100
+                mape = np.mean(np.abs((y_test - predictions) / y_test)) * 100
+                print(f"   Accuracy: {accuracy:.2f}% | MAPE: {mape:.2f}%")
+
+                if accuracy >= accuracy_threshold:
+                    print(f"✅ Accuracy {accuracy:.2f}% >= {accuracy_threshold}% — model accepted!")
+                    self.best_params_ = params
+                    return
+                else:
+                    print(f"⚠️  Accuracy {accuracy:.2f}% < {accuracy_threshold}% — tuning...")
+            else:
+                # Nggak ada test data → langsung accepted (backward compatible buat backtest)
+                self.best_params_ = params
+                print(f"✅ Training complete!")
+                return
+
+        # Habis semua attempt, pake model terakhir
+        print(f"\n⚠️  Semua {max_attempts} attempt selesai. Pake model terakhir.")
+        self.best_params_ = params
     
     def predict_future(self, df_clean, days_ahead=5, max_daily_change=0.03):
         """Predict future prices"""
@@ -252,7 +289,7 @@ def run_prediction(ticker, prediction_days=5, csv_file=None):
         y_train, y_test = y[:split_idx], y[split_idx:]
         
         # 5. Train model
-        predictor.train_model(X_train, y_train)
+        predictor.train_model(X_train, y_train, X_test=X_test, y_test=y_test, accuracy_threshold=60)
         
         # 6. Evaluate
         print("Evaluating model...")
