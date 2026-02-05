@@ -506,4 +506,4 @@ else:
 
 # Footer
 st.write("---")
-st.caption("Sistem Prediksi Saham Perbankan Indonesia | Data: Investing.com | Model: Random Forest")
+st.caption("Sistem Prediksi Saham Perbankan Indonesia | Data: BEI")
