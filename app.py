@@ -276,7 +276,7 @@ if analyze_btn:
             
             # Trading Backtest
             st.write("---")
-            st.header("Simulasi Trading (Backtesting)")
+            st.header("Backtesting")
             st.write("Simulasi strategi trading dengan Take Profit dan Stop Loss")
             
             with st.spinner("Menjalankan simulasi trading..."):
